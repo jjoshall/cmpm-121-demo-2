@@ -15,24 +15,36 @@ canvas.height = 256;
 app.appendChild(canvas);
 
 // Let user draw on canvas with mouse (by registering observers for mouse events)
-// Drawn lines have gold drop shadow because of the canvas styling in style.css
+// Save the user's mouse positions into an array of arrays of points
 const userDrawing = canvas.getContext("2d")!;
 let isDrawing = false;
+const paths: { x: number; y: number }[][] = [];
+let currentPath: { x: number; y: number }[] = [];
+
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  userDrawing.beginPath();
-  userDrawing.moveTo(e.offsetX, e.offsetY);
+  currentPath = [{ x: e.offsetX, y: e.offsetY }];
+  paths.push(currentPath);
+  userDrawing.beginPath(); // Start a new path
+  userDrawing.moveTo(e.offsetX, e.offsetY); // Move to the starting point of the new path
+  canvas.dispatchEvent(
+    new CustomEvent("drawing-changed", { detail: { paths } })
+  );
 });
+
 canvas.addEventListener("mousemove", (e) => {
   if (isDrawing) {
-    userDrawing.lineTo(e.offsetX, e.offsetY);
+    const point = { x: e.offsetX, y: e.offsetY };
+    currentPath.push(point);
+    userDrawing.lineTo(point.x, point.y);
     userDrawing.stroke();
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
   }
 });
+
 canvas.addEventListener("mouseup", () => {
-  isDrawing = false;
-});
-canvas.addEventListener("mouseleave", () => {
   isDrawing = false;
 });
 
@@ -43,6 +55,11 @@ clearButton.style.display = "block";
 clearButton.style.margin = "10px auto";
 clearButton.onclick = () => {
   userDrawing.clearRect(0, 0, canvas.width, canvas.height);
+  userDrawing.beginPath(); // Reset the drawing context path
+  paths.length = 0; // Clear the paths array
+  canvas.dispatchEvent(
+    new CustomEvent("drawing-changed", { detail: { paths } })
+  );
 };
 app.appendChild(clearButton);
 
