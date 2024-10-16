@@ -63,5 +63,61 @@ clearButton.onclick = () => {
 };
 app.appendChild(clearButton);
 
+const redoStack: { x: number; y: number }[][] = []; // Stack to store undone paths
+
+// Adding an undo button to undo the last stroke and centering it underneath the canvas
+const undoButton = document.createElement("button");
+undoButton.textContent = "Undo";
+undoButton.style.display = "block";
+undoButton.style.margin = "10px auto";
+undoButton.onclick = () => {
+  if (paths.length > 0) {
+    const lastPath = paths.pop(); // Remove the last path from the paths array
+    if (lastPath) {
+      redoStack.push(lastPath); // Add the last path to the redo stack
+    }
+    userDrawing.clearRect(0, 0, canvas.width, canvas.height);
+    userDrawing.beginPath(); // Reset the drawing context path
+    paths.forEach((path) => {
+      userDrawing.moveTo(path[0].x, path[0].y);
+      path.forEach((point) => {
+        userDrawing.lineTo(point.x, point.y);
+      });
+      userDrawing.stroke();
+    });
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
+  }
+};
+app.appendChild(undoButton);
+
+// Adding a redo button to redo the last undone stroke and centering it underneath the canvas
+const redoButton = document.createElement("button");
+redoButton.textContent = "Redo";
+redoButton.style.display = "block";
+redoButton.style.margin = "10px auto";
+redoButton.onclick = () => {
+  if (redoStack.length > 0) {
+    const lastUndonePath = redoStack.pop(); // Remove the last undone path from the redo stack
+    if (lastUndonePath) {
+      paths.push(lastUndonePath); // Add the last undone path back to the paths array
+    }
+    userDrawing.clearRect(0, 0, canvas.width, canvas.height);
+    userDrawing.beginPath(); // Reset the drawing context path
+    paths.forEach((path) => {
+      userDrawing.moveTo(path[0].x, path[0].y);
+      path.forEach((point) => {
+        userDrawing.lineTo(point.x, point.y);
+      });
+      userDrawing.stroke();
+    });
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
+  }
+};
+app.appendChild(redoButton);
+
 // Set the document title
 document.title = APP_NAME;
