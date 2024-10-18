@@ -13,6 +13,11 @@ interface Point {
   y: number;
 }
 
+interface ToolPreview {
+  setPosition(x: number, y: number): void;
+  draw(ctx: CanvasRenderingContext2D): void;
+}
+
 interface Drawable {
   addPoint(x: number, y: number): void;
   display(ctx: CanvasRenderingContext2D): void;
@@ -49,6 +54,25 @@ function createDrawablePath(lineWidth: number): Drawable {
   return { addPoint, display, setLineWidth, getLineWidth };
 }
 
+// Function to create a tool preview for which marker tool is selected
+function createCircleToolPreview(radius: number): ToolPreview {
+  let x = 0;
+  let y = 0;
+
+  const setPosition = (newX: number, newY: number) => {
+    x = newX;
+    y = newY;
+  };
+
+  const draw = (ctx: CanvasRenderingContext2D) => {
+    ctx.beginPath();
+    ctx.arc(x, y, radius / 2, 0, 2 * Math.PI);
+    ctx.stroke();
+  };
+
+  return { setPosition, draw };
+}
+
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
@@ -59,6 +83,7 @@ let isDrawing = false;
 const paths: Drawable[] = [];
 let currentPath: Drawable | null = null;
 let currentLineWidth = 1;
+let currentToolPreview: ToolPreview | null = null;
 
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
@@ -72,17 +97,28 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
+  new CustomEvent("tool-moved", { detail: { x: e.offsetX, y: e.offsetY } });
+  currentToolPreview = createCircleToolPreview(currentLineWidth);
   if (isDrawing && currentPath) {
     currentPath.addPoint(e.offsetX, e.offsetY);
     currentPath.display(userDrawing);
     canvas.dispatchEvent(
       new CustomEvent("drawing-changed", { detail: { paths } })
     );
+  } else {
+    if (!currentToolPreview) {
+      currentToolPreview = createCircleToolPreview(currentLineWidth);
+    }
+    currentToolPreview.setPosition(e.offsetX, e.offsetY);
+    userDrawing.clearRect(0, 0, canvas.width, canvas.height);
+    paths.forEach((path) => path.display(userDrawing));
+    currentToolPreview.draw(userDrawing);
   }
 });
 
 canvas.addEventListener("mouseup", () => {
   isDrawing = false;
+  currentToolPreview = createCircleToolPreview(currentLineWidth);
 });
 
 // Creating a container for the buttons and setting its style
@@ -113,8 +149,8 @@ function createToolButton(label: string, lineWidth: number) {
 }
 
 // Creating buttons for 'thin' and 'thick' marker tools and adding them to the container
-const thinButton = createToolButton("Thin", 1);
-const thickButton = createToolButton("Thick", 5);
+const thinButton = createToolButton("Thin", 2.5);
+const thickButton = createToolButton("Thick", 7);
 
 buttonContainer.appendChild(thinButton);
 buttonContainer.appendChild(thickButton);
