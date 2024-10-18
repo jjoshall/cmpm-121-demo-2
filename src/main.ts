@@ -1,6 +1,6 @@
 import "./style.css";
 
-const APP_NAME = "This is the app title";
+const APP_NAME = "Sketchpad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 // Create and append the title element
@@ -8,7 +8,6 @@ const titleElement = document.createElement("h1");
 titleElement.textContent = APP_NAME;
 app.appendChild(titleElement);
 
-// Asked Copilot how to change my class declaration to interface and it gave me this
 interface Point {
   x: number;
   y: number;
@@ -17,10 +16,14 @@ interface Point {
 interface Drawable {
   addPoint(x: number, y: number): void;
   display(ctx: CanvasRenderingContext2D): void;
+  setLineWidth(width: number): void;
+  getLineWidth(): number;
 }
 
-function createDrawablePath(): Drawable {
+// Function to create and display the drawing keeping in mind the line width
+function createDrawablePath(lineWidth: number): Drawable {
   const points: Point[] = [];
+  let currentLineWidth = lineWidth;
 
   const addPoint = (x: number, y: number) => {
     points.push({ x, y });
@@ -28,6 +31,7 @@ function createDrawablePath(): Drawable {
 
   const display = (ctx: CanvasRenderingContext2D) => {
     if (points.length === 0) return;
+    ctx.lineWidth = currentLineWidth;
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     points.forEach((point) => {
@@ -36,25 +40,29 @@ function createDrawablePath(): Drawable {
     ctx.stroke();
   };
 
-  return { addPoint, display };
+  const setLineWidth = (width: number) => {
+    currentLineWidth = width;
+  };
+
+  const getLineWidth = () => currentLineWidth;
+
+  return { addPoint, display, setLineWidth, getLineWidth };
 }
 
-// Adding a canvas to webpage of size 256x256
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
 app.appendChild(canvas);
 
-// Let user draw on canvas with mouse (by registering observers for mouse events)
-// Save the user's mouse positions into an array of Drawable objects
 const userDrawing = canvas.getContext("2d")!;
 let isDrawing = false;
 const paths: Drawable[] = [];
 let currentPath: Drawable | null = null;
+let currentLineWidth = 1;
 
 canvas.addEventListener("mousedown", (e) => {
   isDrawing = true;
-  currentPath = createDrawablePath();
+  currentPath = createDrawablePath(currentLineWidth);
   currentPath.addPoint(e.offsetX, e.offsetY);
   paths.push(currentPath);
   currentPath.display(userDrawing);
@@ -76,6 +84,46 @@ canvas.addEventListener("mousemove", (e) => {
 canvas.addEventListener("mouseup", () => {
   isDrawing = false;
 });
+
+// Creating a container for the buttons and setting its style
+// Asked Copilot for help on this and it gave this
+const buttonContainer = document.createElement("div");
+buttonContainer.style.display = "flex";
+buttonContainer.style.flexDirection = "column";
+buttonContainer.style.alignItems = "center";
+buttonContainer.style.position = "absolute";
+buttonContainer.style.left = "250px";
+buttonContainer.style.top = "50%";
+buttonContainer.style.transform = "translateY(-50%)";
+app.appendChild(buttonContainer);
+
+// Function to create a tool button
+function createToolButton(label: string, lineWidth: number) {
+  const button = document.createElement("button");
+  button.textContent = label;
+  button.style.display = "block";
+  button.style.margin = "5px 0";
+  button.onclick = () => {
+    currentLineWidth = lineWidth;
+    userDrawing.lineWidth = currentLineWidth;
+    selectedToolFeedback.textContent = `Selected Tool: ${label}`;
+    selectedToolFeedback.className = `selected-tool ${label.toLowerCase()}`;
+  };
+  return button;
+}
+
+// Creating buttons for 'thin' and 'thick' marker tools and adding them to the container
+const thinButton = createToolButton("Thin", 1);
+const thickButton = createToolButton("Thick", 5);
+
+buttonContainer.appendChild(thinButton);
+buttonContainer.appendChild(thickButton);
+
+// Create an element to display the selected tool feedback
+const selectedToolFeedback = document.createElement("div");
+selectedToolFeedback.className = "selected-tool";
+selectedToolFeedback.textContent = "Selected Tool: Thin";
+buttonContainer.appendChild(selectedToolFeedback);
 
 // Adding a clear button to clear the canvas and centering it underneath the canvas
 const clearButton = document.createElement("button");

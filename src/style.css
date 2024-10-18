@@ -87,6 +87,26 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Feedback for selected tool */
+.selected-tool {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #646cff;
+  border-radius: 8px;
+}
+
+.selected-tool.thick {
+  background-color: #ff6464;
+}
+
+.selected-tool.thin {
+  background-color: #64ff64;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
