@@ -107,6 +107,20 @@ button:focus-visible {
   background-color: #64ff64;
 }
 
+/* Feedback for selected emoji */
+.selected-emoji {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #646cff;
+  border-radius: 8px;
+}
+
+
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
