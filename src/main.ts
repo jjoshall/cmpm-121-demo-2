@@ -54,6 +54,24 @@ function createDrawablePath(lineWidth: number): Drawable {
   return { addPoint, display, setLineWidth, getLineWidth };
 }
 
+function createDrawableEmoji(emoji: string): Drawable {
+  const points: Point[] = [];
+  const currentEmoji = emoji;
+
+  const addPoint = (x: number, y: number) => {
+    points.push({ x, y });
+  };
+
+  const display = (ctx: CanvasRenderingContext2D) => {
+    ctx.font = "24px serif";
+    points.forEach((point) => {
+      ctx.fillText(currentEmoji, point.x, point.y);
+    });
+  };
+
+  return { addPoint, display, setLineWidth: () => {}, getLineWidth: () => 24 };
+}
+
 // Function to create a tool preview for which marker tool is selected
 function createCircleToolPreview(radius: number): ToolPreview {
   let x = 0;
@@ -73,6 +91,23 @@ function createCircleToolPreview(radius: number): ToolPreview {
   return { setPosition, draw };
 }
 
+function createEmojiToolPreview(emoji: string): ToolPreview {
+  let x = 0;
+  let y = 0;
+
+  const setPosition = (newX: number, newY: number) => {
+    x = newX;
+    y = newY;
+  };
+
+  const draw = (ctx: CanvasRenderingContext2D) => {
+    ctx.font = "20px serif";
+    ctx.fillText(emoji, x - ctx.measureText(emoji).width / 2, y);
+  };
+
+  return { setPosition, draw };
+}
+
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
@@ -85,53 +120,27 @@ let currentPath: Drawable | null = null;
 let currentLineWidth = 1;
 let currentToolPreview: ToolPreview | null = null;
 
-canvas.addEventListener("mousedown", (e) => {
-  isDrawing = true;
-  currentPath = createDrawablePath(currentLineWidth);
-  currentPath.addPoint(e.offsetX, e.offsetY);
-  paths.push(currentPath);
-  currentPath.display(userDrawing);
-  canvas.dispatchEvent(
-    new CustomEvent("drawing-changed", { detail: { paths } })
-  );
-});
-
-canvas.addEventListener("mousemove", (e) => {
-  new CustomEvent("tool-moved", { detail: { x: e.offsetX, y: e.offsetY } });
-  currentToolPreview = createCircleToolPreview(currentLineWidth);
-  if (isDrawing && currentPath) {
-    currentPath.addPoint(e.offsetX, e.offsetY);
-    currentPath.display(userDrawing);
-    canvas.dispatchEvent(
-      new CustomEvent("drawing-changed", { detail: { paths } })
-    );
-  } else {
-    if (!currentToolPreview) {
-      currentToolPreview = createCircleToolPreview(currentLineWidth);
-    }
-    currentToolPreview.setPosition(e.offsetX, e.offsetY);
-    userDrawing.clearRect(0, 0, canvas.width, canvas.height);
-    paths.forEach((path) => path.display(userDrawing));
-    currentToolPreview.draw(userDrawing);
-  }
-});
-
-canvas.addEventListener("mouseup", () => {
-  isDrawing = false;
-  currentToolPreview = createCircleToolPreview(currentLineWidth);
-});
-
 // Creating a container for the buttons and setting its style
 // Asked Copilot for help on this and it gave this
-const buttonContainer = document.createElement("div");
-buttonContainer.style.display = "flex";
-buttonContainer.style.flexDirection = "column";
-buttonContainer.style.alignItems = "center";
-buttonContainer.style.position = "absolute";
-buttonContainer.style.left = "250px";
-buttonContainer.style.top = "50%";
-buttonContainer.style.transform = "translateY(-50%)";
-app.appendChild(buttonContainer);
+const toolButtonContainer = document.createElement("div");
+toolButtonContainer.style.display = "flex";
+toolButtonContainer.style.flexDirection = "column";
+toolButtonContainer.style.alignItems = "center";
+toolButtonContainer.style.position = "absolute";
+toolButtonContainer.style.left = "250px";
+toolButtonContainer.style.top = "50%";
+toolButtonContainer.style.transform = "translateY(-50%)";
+app.appendChild(toolButtonContainer);
+
+const emojiButtonContainer = document.createElement("div");
+emojiButtonContainer.style.display = "flex";
+emojiButtonContainer.style.flexDirection = "column";
+emojiButtonContainer.style.alignItems = "center";
+emojiButtonContainer.style.position = "absolute";
+emojiButtonContainer.style.left = "850px";
+emojiButtonContainer.style.top = "50%";
+emojiButtonContainer.style.transform = "translateY(-50%)";
+app.appendChild(emojiButtonContainer);
 
 // Function to create a tool button
 function createToolButton(label: string, lineWidth: number) {
@@ -140,6 +149,8 @@ function createToolButton(label: string, lineWidth: number) {
   button.style.display = "block";
   button.style.margin = "5px 0";
   button.onclick = () => {
+    // turn emoji tool off
+    currentTool = null;
     currentLineWidth = lineWidth;
     userDrawing.lineWidth = currentLineWidth;
     selectedToolFeedback.textContent = `Selected Tool: ${label}`;
@@ -152,14 +163,117 @@ function createToolButton(label: string, lineWidth: number) {
 const thinButton = createToolButton("Thin", 2.5);
 const thickButton = createToolButton("Thick", 7);
 
-buttonContainer.appendChild(thinButton);
-buttonContainer.appendChild(thickButton);
+toolButtonContainer.appendChild(thinButton);
+toolButtonContainer.appendChild(thickButton);
 
 // Create an element to display the selected tool feedback
 const selectedToolFeedback = document.createElement("div");
 selectedToolFeedback.className = "selected-tool";
 selectedToolFeedback.textContent = "Selected Tool: Thin";
-buttonContainer.appendChild(selectedToolFeedback);
+toolButtonContainer.appendChild(selectedToolFeedback);
+
+function createEmojiButton(emoji: string) {
+  const button = document.createElement("button");
+  button.textContent = emoji;
+  button.style.display = "block";
+  button.style.margin = "5px 0";
+  button.onclick = () => {
+    new CustomEvent("tool-moved", { detail: { tool: emoji } });
+    currentTool = emoji;
+    selectedEmojiFeedback.textContent = `Selected Emoji: ${emoji}`;
+    selectedEmojiFeedback.className = `selected-emoji ${emoji.toLowerCase()}`;
+  };
+  return button;
+}
+
+const smileyButton = createEmojiButton("😁");
+const angerButton = createEmojiButton("😡");
+const highFiveButton = createEmojiButton("🙏");
+
+emojiButtonContainer.appendChild(smileyButton);
+emojiButtonContainer.appendChild(angerButton);
+emojiButtonContainer.appendChild(highFiveButton);
+
+const selectedEmojiFeedback = document.createElement("div");
+selectedEmojiFeedback.className = "selected-emoji";
+selectedEmojiFeedback.textContent = "Selected Emoji: None";
+emojiButtonContainer.appendChild(selectedEmojiFeedback);
+
+let currentTool: string | null = null;
+
+function drawEmoji(x: number, y: number, emoji: string) {
+  userDrawing.font = `${currentLineWidth * 10}px serif`;
+  userDrawing.fillText(emoji, x, y);
+}
+
+let isDraggingEmoji = false;
+let emojiPosition: Point = { x: 0, y: 0 };
+
+canvas.addEventListener("mousedown", (e) => {
+  isDrawing = true;
+  isDraggingEmoji = true;
+  if (currentTool) {
+    emojiPosition = { x: e.offsetX - 15, y: e.offsetY + 1 };
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
+  } else {
+    currentPath = createDrawablePath(currentLineWidth);
+    currentPath.addPoint(e.offsetX, e.offsetY);
+    paths.push(currentPath);
+    currentPath.display(userDrawing);
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
+  }
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  new CustomEvent("tool-moved", { detail: { x: e.offsetX, y: e.offsetY } });
+
+  if (isDraggingEmoji && currentTool) {
+    emojiPosition = { x: e.offsetX - 15, y: e.offsetY + 1 };
+    userDrawing.clearRect(0, 0, canvas.width, canvas.height);
+    paths.forEach((path) => path.display(userDrawing));
+    drawEmoji(emojiPosition.x, emojiPosition.y, currentTool);
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
+  } else if (isDrawing && currentPath) {
+    currentPath.addPoint(e.offsetX, e.offsetY);
+    currentPath.display(userDrawing);
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
+  }
+
+  if (currentTool) {
+    currentToolPreview = createEmojiToolPreview(currentTool);
+  } else {
+    currentToolPreview = createCircleToolPreview(currentLineWidth);
+  }
+
+  if (currentToolPreview) {
+    currentToolPreview.setPosition(e.offsetX, e.offsetY);
+    userDrawing.clearRect(0, 0, canvas.width, canvas.height);
+    paths.forEach((path) => path.display(userDrawing));
+    currentToolPreview.draw(userDrawing);
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  if (isDraggingEmoji && currentTool) {
+    const emojiDrawable = createDrawableEmoji(currentTool);
+    emojiDrawable.addPoint(emojiPosition.x, emojiPosition.y);
+    paths.push(emojiDrawable);
+    canvas.dispatchEvent(
+      new CustomEvent("drawing-changed", { detail: { paths } })
+    );
+  }
+
+  isDrawing = false;
+  isDraggingEmoji = false;
+});
 
 // Adding a clear button to clear the canvas and centering it underneath the canvas
 const clearButton = document.createElement("button");
