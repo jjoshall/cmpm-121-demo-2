@@ -355,5 +355,26 @@ redoButton.onclick = () => {
 };
 app.appendChild(redoButton);
 
+// Adding an export button to export the drawing as an image and centering it underneath the canvas
+const exportButton = document.createElement("button");
+exportButton.textContent = "Export Drawing";
+exportButton.style.display = "block";
+exportButton.style.margin = "10px auto";
+exportButton.onclick = () => {
+  // Temporarily create a new canvas object of size 1024x1024
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = 1024;
+  exportCanvas.height = 1024;
+  const exportCtx = exportCanvas.getContext("2d")!;
+  exportCtx.scale(4, 4); // Scale the context to fit the larger canvas
+  paths.forEach((path) => path.display(exportCtx)); // Redraw all paths on the new canvas
+
+  const link = document.createElement("a");
+  link.download = "drawing.png";
+  link.href = exportCanvas.toDataURL();
+  link.click();
+};
+app.appendChild(exportButton);
+
 // Set the document title
 document.title = APP_NAME;
