@@ -100,11 +100,11 @@ button:focus-visible {
 }
 
 .selected-tool.thick {
-  background-color: lightcoral;
+  background-color: black;
 }
 
 .selected-tool.thin {
-  background-color: lightgreen;
+  background-color: black;
 }
 
 .selected-tool:hover {

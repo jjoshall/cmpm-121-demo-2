@@ -23,12 +23,15 @@ interface Drawable {
   display(ctx: CanvasRenderingContext2D): void;
   setLineWidth(width: number): void;
   getLineWidth(): number;
+  setLineColor(color: string): void;
+  getLineColor(): string;
 }
 
 // Function to create and display the drawing keeping in mind the line width
-function createDrawablePath(lineWidth: number): Drawable {
+function createDrawablePath(lineWidth: number, color: string): Drawable {
   const points: Point[] = [];
   let currentLineWidth = lineWidth;
+  let currentLineColor = color;
 
   const addPoint = (x: number, y: number) => {
     points.push({ x, y });
@@ -37,6 +40,7 @@ function createDrawablePath(lineWidth: number): Drawable {
   const display = (ctx: CanvasRenderingContext2D) => {
     if (points.length === 0) return;
     ctx.lineWidth = currentLineWidth;
+    ctx.strokeStyle = currentLineColor;
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     points.forEach((point) => {
@@ -51,7 +55,20 @@ function createDrawablePath(lineWidth: number): Drawable {
 
   const getLineWidth = () => currentLineWidth;
 
-  return { addPoint, display, setLineWidth, getLineWidth };
+  const setLineColor = (color: string) => {
+    currentLineColor = color;
+  };
+
+  const getLineColor = () => currentLineColor;
+
+  return {
+    addPoint,
+    display,
+    setLineWidth,
+    getLineWidth,
+    setLineColor,
+    getLineColor,
+  };
 }
 
 function createDrawableEmoji(emoji: string): Drawable {
@@ -69,7 +86,26 @@ function createDrawableEmoji(emoji: string): Drawable {
     });
   };
 
-  return { addPoint, display, setLineWidth: () => {}, getLineWidth: () => 24 };
+  const setLineWidth = (_width: number) => {
+    // Do nothing
+  };
+
+  const getLineWidth = () => 0;
+
+  const setLineColor = (_color: string) => {
+    // Do nothing
+  };
+
+  const getLineColor = () => "";
+
+  return {
+    addPoint,
+    display,
+    setLineWidth,
+    getLineWidth,
+    setLineColor,
+    getLineColor,
+  };
 }
 
 // Function to create a tool preview for which marker tool is selected
@@ -118,6 +154,7 @@ let isDrawing = false;
 const paths: Drawable[] = [];
 let currentPath: Drawable | null = null;
 let currentLineWidth = 1;
+let currentLineColor = "black";
 let currentToolPreview: ToolPreview | null = null;
 
 function createContainer() {
@@ -142,7 +179,7 @@ emojiButtonContainer.style.left = "850px";
 app.appendChild(emojiButtonContainer);
 
 // Function to create a tool button
-function createToolButton(label: string, lineWidth: number) {
+function createToolButton(label: string, lineWidth: number, color: string) {
   const button = document.createElement("button");
   button.className = "selected-tool";
   button.textContent = label;
@@ -152,19 +189,39 @@ function createToolButton(label: string, lineWidth: number) {
     // turn emoji tool off
     currentTool = null;
     currentLineWidth = lineWidth;
+    currentLineColor = color;
     userDrawing.lineWidth = currentLineWidth;
+    userDrawing.strokeStyle = currentLineColor;
     selectedToolFeedback.textContent = `Pen Style: ${label}`;
     selectedToolFeedback.className = `selected-tool ${label.toLowerCase()}`;
+    selectedToolFeedback.style.backgroundColor = color;
   };
   return button;
 }
 
 // Creating buttons for 'thin' and 'thick' marker tools and adding them to the container
-const thinButton = createToolButton("Thin", 1.75);
-const thickButton = createToolButton("Thick", 7);
+const thinButton = createToolButton("Thin", 1.75, "black");
+const thickButton = createToolButton("Thick", 7, "black");
 
 toolButtonContainer.appendChild(thinButton);
 toolButtonContainer.appendChild(thickButton);
+
+// Creating a slider to adjust the color of the marker tool
+const colorSlider = document.createElement("input");
+colorSlider.type = "range";
+colorSlider.min = "0";
+colorSlider.max = "360";
+colorSlider.value = "0";
+colorSlider.style.width = "200px";
+colorSlider.style.margin = "10px auto";
+// Asked Copilot for help on this and it gave this
+colorSlider.oninput = (e) => {
+  const hue = (e.target as HTMLInputElement).value;
+  currentLineColor = `hsl(${hue}, 100%, 50%)`;
+  userDrawing.strokeStyle = currentLineColor;
+  selectedToolFeedback.style.backgroundColor = currentLineColor;
+};
+toolButtonContainer.appendChild(colorSlider);
 
 // Create an element to display the marker feedback
 const selectedToolFeedback = document.createElement("div");
@@ -244,7 +301,7 @@ canvas.addEventListener("mousedown", (e) => {
       new CustomEvent("drawing-changed", { detail: { paths } })
     );
   } else {
-    currentPath = createDrawablePath(currentLineWidth);
+    currentPath = createDrawablePath(currentLineWidth, currentLineColor);
     currentPath.addPoint(e.offsetX, e.offsetY);
     paths.push(currentPath);
     currentPath.display(userDrawing);
