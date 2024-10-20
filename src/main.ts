@@ -186,13 +186,37 @@ function createEmojiButton(emoji: string) {
   return button;
 }
 
+function createNewCustomEmojiButton() {
+  const button = document.createElement("button");
+  button.textContent = "Choose Your Own Emoji!";
+  button.style.display = "block";
+  button.style.margin = "5px 0";
+  button.onclick = () => {
+    const customEmoji = prompt("Enter your custom emoji");
+    if (customEmoji) {
+      const newCustomEmojiButton = createNewCustomEmojiButton();
+      emojiButtonContainer.insertBefore(newCustomEmojiButton, button);
+      button.textContent = customEmoji;
+      button.onclick = () => {
+        new CustomEvent("tool-moved", { detail: { tool: customEmoji } });
+        currentTool = customEmoji;
+        selectedEmojiFeedback.textContent = `Selected Emoji: ${customEmoji}`;
+        selectedEmojiFeedback.className = `selected-emoji ${customEmoji.toLowerCase()}`;
+      };
+    }
+  };
+  return button;
+}
+
 const smileyButton = createEmojiButton("😁");
 const angerButton = createEmojiButton("😡");
 const highFiveButton = createEmojiButton("🙏");
+const customEmojiButton = createNewCustomEmojiButton();
 
 emojiButtonContainer.appendChild(smileyButton);
 emojiButtonContainer.appendChild(angerButton);
 emojiButtonContainer.appendChild(highFiveButton);
+emojiButtonContainer.appendChild(customEmojiButton);
 
 const selectedEmojiFeedback = document.createElement("div");
 selectedEmojiFeedback.className = "selected-emoji";
