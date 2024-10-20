@@ -1,6 +1,6 @@
 import "./style.css";
 
-const APP_NAME = "Sketchpad";
+const APP_NAME = "Drawing & Emoticons";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 // Create and append the title element
@@ -63,7 +63,7 @@ function createDrawableEmoji(emoji: string): Drawable {
   };
 
   const display = (ctx: CanvasRenderingContext2D) => {
-    ctx.font = "24px serif";
+    ctx.font = "28px serif";
     points.forEach((point) => {
       ctx.fillText(currentEmoji, point.x, point.y);
     });
@@ -101,7 +101,7 @@ function createEmojiToolPreview(emoji: string): ToolPreview {
   };
 
   const draw = (ctx: CanvasRenderingContext2D) => {
-    ctx.font = "20px serif";
+    ctx.font = "28px serif";
     ctx.fillText(emoji, x - ctx.measureText(emoji).width / 2, y);
   };
 
@@ -120,31 +120,31 @@ let currentPath: Drawable | null = null;
 let currentLineWidth = 1;
 let currentToolPreview: ToolPreview | null = null;
 
+function createContainer() {
+  const container = document.createElement("div");
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.alignItems = "center";
+  container.style.position = "absolute";
+  container.style.top = "50%";
+  container.style.transform = "translateY(-50%)";
+  return container;
+}
+
 // Creating a container for the buttons and setting its style
 // Asked Copilot for help on this and it gave this
-const toolButtonContainer = document.createElement("div");
-toolButtonContainer.style.display = "flex";
-toolButtonContainer.style.flexDirection = "column";
-toolButtonContainer.style.alignItems = "center";
-toolButtonContainer.style.position = "absolute";
+const toolButtonContainer = createContainer();
 toolButtonContainer.style.left = "250px";
-toolButtonContainer.style.top = "50%";
-toolButtonContainer.style.transform = "translateY(-50%)";
 app.appendChild(toolButtonContainer);
 
-const emojiButtonContainer = document.createElement("div");
-emojiButtonContainer.style.display = "flex";
-emojiButtonContainer.style.flexDirection = "column";
-emojiButtonContainer.style.alignItems = "center";
-emojiButtonContainer.style.position = "absolute";
+const emojiButtonContainer = createContainer();
 emojiButtonContainer.style.left = "850px";
-emojiButtonContainer.style.top = "50%";
-emojiButtonContainer.style.transform = "translateY(-50%)";
 app.appendChild(emojiButtonContainer);
 
 // Function to create a tool button
 function createToolButton(label: string, lineWidth: number) {
   const button = document.createElement("button");
+  button.className = "selected-tool";
   button.textContent = label;
   button.style.display = "block";
   button.style.margin = "5px 0";
@@ -153,27 +153,28 @@ function createToolButton(label: string, lineWidth: number) {
     currentTool = null;
     currentLineWidth = lineWidth;
     userDrawing.lineWidth = currentLineWidth;
-    selectedToolFeedback.textContent = `Selected Tool: ${label}`;
+    selectedToolFeedback.textContent = `Pen Style: ${label}`;
     selectedToolFeedback.className = `selected-tool ${label.toLowerCase()}`;
   };
   return button;
 }
 
 // Creating buttons for 'thin' and 'thick' marker tools and adding them to the container
-const thinButton = createToolButton("Thin", 2.5);
+const thinButton = createToolButton("Thin", 1.75);
 const thickButton = createToolButton("Thick", 7);
 
 toolButtonContainer.appendChild(thinButton);
 toolButtonContainer.appendChild(thickButton);
 
-// Create an element to display the selected tool feedback
+// Create an element to display the marker feedback
 const selectedToolFeedback = document.createElement("div");
 selectedToolFeedback.className = "selected-tool";
-selectedToolFeedback.textContent = "Selected Tool: Thin";
+selectedToolFeedback.textContent = "Pen Style: None";
 toolButtonContainer.appendChild(selectedToolFeedback);
 
 function createEmojiButton(emoji: string) {
   const button = document.createElement("button");
+  button.className = "selected-tool";
   button.textContent = emoji;
   button.style.display = "block";
   button.style.margin = "5px 0";
@@ -188,6 +189,7 @@ function createEmojiButton(emoji: string) {
 
 function createNewCustomEmojiButton() {
   const button = document.createElement("button");
+  button.className = "selected-tool";
   button.textContent = "Choose Your Own Emoji!";
   button.style.display = "block";
   button.style.margin = "5px 0";
@@ -209,13 +211,13 @@ function createNewCustomEmojiButton() {
 }
 
 const smileyButton = createEmojiButton("😁");
-const angerButton = createEmojiButton("😡");
-const highFiveButton = createEmojiButton("🙏");
+const laughingButton = createEmojiButton("😂");
+const cryButton = createEmojiButton("😭");
 const customEmojiButton = createNewCustomEmojiButton();
 
 emojiButtonContainer.appendChild(smileyButton);
-emojiButtonContainer.appendChild(angerButton);
-emojiButtonContainer.appendChild(highFiveButton);
+emojiButtonContainer.appendChild(laughingButton);
+emojiButtonContainer.appendChild(cryButton);
 emojiButtonContainer.appendChild(customEmojiButton);
 
 const selectedEmojiFeedback = document.createElement("div");
@@ -299,11 +301,17 @@ canvas.addEventListener("mouseup", () => {
   isDraggingEmoji = false;
 });
 
+function createExtraButtons(buttonTitle: string) {
+  const button = document.createElement("button");
+  button.className = "selected-tool";
+  button.textContent = buttonTitle;
+  button.style.display = "block";
+  button.style.margin = "10px auto";
+  return button;
+}
+
 // Adding a clear button to clear the canvas and centering it underneath the canvas
-const clearButton = document.createElement("button");
-clearButton.textContent = "Clear Drawing";
-clearButton.style.display = "block";
-clearButton.style.margin = "10px auto";
+const clearButton = createExtraButtons("Clear Drawing");
 clearButton.onclick = () => {
   userDrawing.clearRect(0, 0, canvas.width, canvas.height);
   paths.length = 0; // Clear the paths array
@@ -316,10 +324,7 @@ app.appendChild(clearButton);
 const redoStack: Drawable[] = []; // Stack to store undone paths
 
 // Adding an undo button to undo the last stroke and centering it underneath the canvas
-const undoButton = document.createElement("button");
-undoButton.textContent = "Undo";
-undoButton.style.display = "block";
-undoButton.style.margin = "10px auto";
+const undoButton = createExtraButtons("Undo");
 undoButton.onclick = () => {
   if (paths.length > 0) {
     const lastPath = paths.pop(); // Remove the last path from the paths array
@@ -336,10 +341,7 @@ undoButton.onclick = () => {
 app.appendChild(undoButton);
 
 // Adding a redo button to redo the last undone stroke and centering it underneath the canvas
-const redoButton = document.createElement("button");
-redoButton.textContent = "Redo";
-redoButton.style.display = "block";
-redoButton.style.margin = "10px auto";
+const redoButton = createExtraButtons("Redo");
 redoButton.onclick = () => {
   if (redoStack.length > 0) {
     const lastUndonePath = redoStack.pop(); // Remove the last undone path from the redo stack
@@ -356,10 +358,7 @@ redoButton.onclick = () => {
 app.appendChild(redoButton);
 
 // Adding an export button to export the drawing as an image and centering it underneath the canvas
-const exportButton = document.createElement("button");
-exportButton.textContent = "Export Drawing";
-exportButton.style.display = "block";
-exportButton.style.margin = "10px auto";
+const exportButton = createExtraButtons("Export Drawing");
 exportButton.onclick = () => {
   // Temporarily create a new canvas object of size 1024x1024
   const exportCanvas = document.createElement("canvas");

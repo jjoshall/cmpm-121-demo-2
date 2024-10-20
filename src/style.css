@@ -95,16 +95,26 @@ button:focus-visible {
   font-size: 1.2em;
   font-weight: bold;
   color: #ffffff;
-  background-color: #646cff;
   border-radius: 8px;
+  transition: background-color 0.3s, transform 0.2s ease;
 }
 
 .selected-tool.thick {
-  background-color: #ff6464;
+  background-color: lightcoral;
 }
 
 .selected-tool.thin {
-  background-color: #64ff64;
+  background-color: lightgreen;
+}
+
+.selected-tool:hover {
+  background-color: #505acb;
+  transform: scale(1.1);
+}
+
+.selected-tool:active {
+  transform: scale(0.9);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
 /* Feedback for selected emoji */
@@ -117,9 +127,18 @@ button:focus-visible {
   color: #ffffff;
   background-color: #646cff;
   border-radius: 8px;
+  transition: background-color 0.3s, transform 0.2s ease;
 }
 
+.selected-emoji:hover {
+  background-color: #505acb;
+  transform: scale(1.1);
+}
 
+.selected-emoji:active {
+  transform: scale(0.9);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+}
 
 @media (prefers-color-scheme: light) {
   :root {
