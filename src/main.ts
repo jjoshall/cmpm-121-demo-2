@@ -6,7 +6,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 // Create and append the title element
 const titleElement = document.createElement("h1");
 titleElement.textContent = APP_NAME;
-app.appendChild(titleElement);
+// app.appendChild(titleElement);
 
 interface Point {
   x: number;
@@ -147,7 +147,7 @@ function createEmojiToolPreview(emoji: string): ToolPreview {
 const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
-app.appendChild(canvas);
+// app.appendChild(canvas);
 
 const userDrawing = canvas.getContext("2d")!;
 let isDrawing = false;
@@ -177,6 +177,14 @@ app.appendChild(toolButtonContainer);
 const emojiButtonContainer = createContainer();
 emojiButtonContainer.style.left = "850px";
 app.appendChild(emojiButtonContainer);
+
+// Title, canvas, clear, undo, redo, export buttons
+const canvasContainer = createContainer();
+canvasContainer.style.left = "400px";
+app.appendChild(canvasContainer);
+
+canvasContainer.appendChild(titleElement);
+canvasContainer.appendChild(canvas);
 
 // Function to create a tool button
 function createToolButton(label: string, lineWidth: number, color: string) {
@@ -376,7 +384,7 @@ clearButton.onclick = () => {
     new CustomEvent("drawing-changed", { detail: { paths } })
   );
 };
-app.appendChild(clearButton);
+canvasContainer.appendChild(clearButton);
 
 const redoStack: Drawable[] = []; // Stack to store undone paths
 
@@ -395,7 +403,7 @@ undoButton.onclick = () => {
     );
   }
 };
-app.appendChild(undoButton);
+canvasContainer.appendChild(undoButton);
 
 // Adding a redo button to redo the last undone stroke and centering it underneath the canvas
 const redoButton = createExtraButtons("Redo");
@@ -412,7 +420,7 @@ redoButton.onclick = () => {
     );
   }
 };
-app.appendChild(redoButton);
+canvasContainer.appendChild(redoButton);
 
 // Adding an export button to export the drawing as an image and centering it underneath the canvas
 const exportButton = createExtraButtons("Export Drawing");
@@ -430,7 +438,8 @@ exportButton.onclick = () => {
   link.href = exportCanvas.toDataURL();
   link.click();
 };
-app.appendChild(exportButton);
+canvasContainer.appendChild(exportButton);
+
 
 // Set the document title
 document.title = APP_NAME;
