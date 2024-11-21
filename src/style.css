@@ -152,3 +152,34 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.centered-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tool-button-container {
+  left: 250px;
+}
+
+.emoji-button-container {
+  left: 850px;
+}
+
+.canvas-container {
+  left: 400px;
+}
+
+.color-slider {
+  width: 200px;
+  margin: 10px auto;
+}
+
+.extra-button {
+  display: block;
+  margin: 10px auto;
+}
