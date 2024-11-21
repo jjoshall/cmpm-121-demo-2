@@ -38,13 +38,14 @@ function createDrawablePath(lineWidth: number, color: string): Drawable {
   };
 
   const display = (ctx: CanvasRenderingContext2D) => {
-    if (points.length === 0) return;
+    if (points.length === 0) 
+      return;
     ctx.lineWidth = currentLineWidth;
-    ctx.strokeStyle = currentLineColor;
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
+    ctx.strokeStyle = currentLineColor;  
+    ctx.beginPath();  // new path to begin drawing 
+    ctx.moveTo(points[0].x, points[0].y);  // first point in the path
     points.forEach((point) => {
-      ctx.lineTo(point.x, point.y);
+      ctx.lineTo(point.x, point.y); 
     });
     ctx.stroke();
   };
@@ -86,15 +87,11 @@ function createDrawableEmoji(emoji: string): Drawable {
     });
   };
 
-  const setLineWidth = (_width: number) => {
-    // Do nothing
-  };
+  const setLineWidth = (_width: number) => {};
 
   const getLineWidth = () => 0;
 
-  const setLineColor = (_color: string) => {
-    // Do nothing
-  };
+  const setLineColor = (_color: string) => {};
 
   const getLineColor = () => "";
 
@@ -120,6 +117,10 @@ function createCircleToolPreview(radius: number): ToolPreview {
 
   const draw = (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
+    // x, y is the center
+    // radius / 2 scales it down
+    // 0 is the starting angle
+    // 2 * Math.PI completes the circle
     ctx.arc(x, y, radius / 2, 0, 2 * Math.PI);
     ctx.stroke();
   };
@@ -159,28 +160,24 @@ let currentToolPreview: ToolPreview | null = null;
 
 function createContainer() {
   const container = document.createElement("div");
-  container.style.display = "flex";
-  container.style.flexDirection = "column";
-  container.style.alignItems = "center";
-  container.style.position = "absolute";
-  container.style.top = "50%";
-  container.style.transform = "translateY(-50%)";
+  container.classList.add("centered-container"); // i put this in style.css instead of having it in main
   return container;
 }
 
 // Creating a container for the buttons and setting its style
 // Asked Copilot for help on this and it gave this
+
+// moved all styling to style.css
 const toolButtonContainer = createContainer();
-toolButtonContainer.style.left = "250px";
+toolButtonContainer.classList.add("tool-button-container"); 
 app.appendChild(toolButtonContainer);
 
 const emojiButtonContainer = createContainer();
-emojiButtonContainer.style.left = "850px";
+emojiButtonContainer.classList.add("emoji-button-container"); 
 app.appendChild(emojiButtonContainer);
 
-// Title, canvas, clear, undo, redo, export buttons
 const canvasContainer = createContainer();
-canvasContainer.style.left = "400px";
+canvasContainer.classList.add("canvas-container"); 
 app.appendChild(canvasContainer);
 
 canvasContainer.appendChild(titleElement);
@@ -215,14 +212,14 @@ toolButtonContainer.appendChild(thinButton);
 toolButtonContainer.appendChild(thickButton);
 
 // Creating a slider to adjust the color of the marker tool
+// Creating a slider to adjust the color of the marker tool
 const colorSlider = document.createElement("input");
 colorSlider.type = "range";
 colorSlider.min = "0";
 colorSlider.max = "360";
 colorSlider.value = "0";
-colorSlider.style.width = "200px";
-colorSlider.style.margin = "10px auto";
-// Asked Copilot for help on this and it gave this
+colorSlider.className = "color-slider"; // Use class for styling
+
 colorSlider.oninput = (e) => {
   const hue = (e.target as HTMLInputElement).value;
   currentLineColor = `hsl(${hue}, 100%, 50%)`;
@@ -368,10 +365,8 @@ canvas.addEventListener("mouseup", () => {
 
 function createExtraButtons(buttonTitle: string) {
   const button = document.createElement("button");
-  button.className = "selected-tool";
+  button.className = "selected-tool extra-button";
   button.textContent = buttonTitle;
-  button.style.display = "block";
-  button.style.margin = "10px auto";
   return button;
 }
 
